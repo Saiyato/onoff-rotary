@@ -1,5 +1,10 @@
 const EventEmitter = require('events').EventEmitter;
 const Gpio = require('onoff').Gpio;
+const rotaryLogic = Object.freeze({"DEFAULT":0, "KY040":1 });
+
+LAST_CLK = 0;
+LAST_DT = 0;
+LAST_ENCODED = 00;
 
 /**
  * Creates a new Rotary Encoder using two GPIO pins
@@ -10,50 +15,124 @@ const Gpio = require('onoff').Gpio;
  *
  * @returns EventEmitter
  */
-function RotaryEncoder(pinA, pinB) {
-	this.gpioA = new Gpio(pinA, 'in', 'both');
-	this.gpioB = new Gpio(pinB, 'in', 'both');
+function RotaryEncoder(pin_CLK, pin_DT, pin_SW, encoderType) {
+	this.CLK = new Gpio(pin_CLK, 'in', 'both');
+	this.DT = new Gpio(pin_DT, 'in', 'both');
+	this.SW = new Gpio(pin_SW, 'in', 'both');
 
-	this.a = 2;
-	this.b = 2;
+	this.clk_value = 2;
+	this.dt_value = 2;
+	this.sw_value = 0;
+	this.encType = encoderType;
 
-	this.gpioA.watch((err, value) => {
+	this.CLK.watch((err, value) => {
 		if (err) {
 			this.emit('error', err);
-
 			return;
 		}
-
-		this.a = value;
+		this.clk_value = value;
 	});
 
-	this.gpioB.watch((err, value) => {
+	this.DT.watch((err, value) => {
 		if (err) {
 			this.emit('error', err);
-
 			return;
 		}
-
-		this.b = value;
-
-		this.tick();
+		this.dt_value = value;
+		
+		console.log('Encoding type: ' + encoderType);
+		
+		switch(encoderType)
+		{
+			case rotaryLogic.DEFAULT:
+				this.defaultTick();
+				break;
+			case rotaryLogic.KY040:
+				this.ky040Tick();
+				break;
+			default:
+				this.defaultTick();
+		}
 	});
+	
+	
+	this.SW.watch((err, value) => {
+		if (err) {
+			this.emit('error', err);
+			return;
+		}
+		
+		this.sw_value = value;
+		this.click();
+	});	
+	
 }
 
 RotaryEncoder.prototype = EventEmitter.prototype;
 
-RotaryEncoder.prototype.tick = function tick() {
-	const { a, b } = this;
-
-	if (a === 0 && b === 0 || a === 1 && b === 1) {
+RotaryEncoder.prototype.ky040Tick = function ky040Tick() {
+	const { clk_value, dt_value } = this;
+	console.log('Using KY040 logic');
+	
+	if (clk_value == dt_value && (clk_value != LAST_CLK || dt_value != LAST_DT) && clk_value == 0)	
+	{
+		// CCW
 		this.emit('rotation', 1);
-	} else if (a === 1 && b === 0 || a === 0 && b === 1 || a === 2 && b === 0) {
+	}
+	else if( clk_value != dt_value && (clk_value != LAST_CLK || dt_value != LAST_DT) && clk_value == 0)
+	{
+		// CW
 		this.emit('rotation', -1);
 	}
-
+	
+	LAST_CLK = clk_value;
+	LAST_DT = dt_value;	
 	return this;
 };
 
-module.exports = function rotaryEncoder(pinA, pinB) {
-	return new RotaryEncoder(pinA, pinB);
+RotaryEncoder.prototype.defaultTick = function defaultTick()
+{
+	/* 
+		Gray code 
+		[
+			00,
+			01,
+			11,
+			10
+		]
+	*/
+	const { clk_value, dt_value } = this;
+	console.log('Using gray code logic');
+	
+	const MSB = clk_value;
+	const LSB = dt_value;
+
+	const encoded = (MSB << 1) | LSB;
+	const sum = (LAST_ENCODED << 2) | encoded;
+
+	if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
+		// CW
+		this.emit('rotation', 1);
+	}
+	if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
+		// CCW
+		this.emit('rotation', -1);
+	}
+
+	LAST_ENCODED = encoded;
+	return this;
+}
+
+RotaryEncoder.prototype.click = function click() {
+	// 0 = down, 1 = up
+	const { sw_value } = this;
+	
+	// CLICK
+	this.emit('click', sw_value);
+	
+	return this;
+};
+
+module.exports = function rotaryEncoder(pin_CLK, pin_DT, pin_SW, encoderType) {
+	return new RotaryEncoder(pin_CLK, pin_DT, pin_SW, encoderType);
 };

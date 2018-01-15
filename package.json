@@ -1,7 +1,7 @@
 {
   "name": "onoff-rotary",
-  "version": "0.1.1",
-  "description": "EventEmitter based micro-library for use with onoff to read output from rotary encoders on Raspberry PI and others",
+  "version": "0.2.1",
+  "description": "Extended version of the original EventEmitter based micro-library for use with onoff to read output from rotary encoders on Raspberry PI and others",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,7 +20,7 @@
     "pi",
     "eventemitter"
   ],
-  "author": "Florian Pichler <fp@ylk.gd>",
+  "author": "Saiyato",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/pichfl/onoff-rotary/issues"
