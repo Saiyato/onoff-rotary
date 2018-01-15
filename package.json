@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pichfl/onoff-rotary.git"
+    "url": "git+https://github.com/Saiyato/onoff-rotary.git"
   },
   "keywords": [
     "onoff",
@@ -23,9 +23,9 @@
   "author": "Saiyato",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pichfl/onoff-rotary/issues"
+    "url": "https://github.com/Saiyato/onoff-rotary/issues"
   },
-  "homepage": "https://github.com/pichfl/onoff-rotary#readme",
+  "homepage": "https://github.com/Saiyato/onoff-rotary#readme",
   "dependencies": {
     "onoff": "^1.1.1"
   }
