@@ -6,7 +6,7 @@ This library might fail to install on other platforms!
 
 **Please note: This is provided as is and probably not properly maintained, it should work fine if you have node >= 6.**
 
-###Extension
+### Extension
 I've added two parameters to the class:
 
 1. An additional GPIO pin for a push button
